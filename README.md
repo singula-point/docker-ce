@@ -7,6 +7,19 @@ version for the lifetime of the product.
 
 This repository is solely maintained by Docker, Inc.
 
+## Usages
+for ubuntu-xenial(ubuntu 16.04), just type
+```
+$ make mydeb
+```
+you will see the deb file under the top project directory.
+different from upstream Docker source:
+* clone tini,proxy,runc,containerd source if they are not exist.
+* change debbuild-XXX/XXX docker images (from singula/docker-dev).
+* change Makefile and build scripts.
+
+Powered by singula-point
+
 ## Issues
 
 There are separate issue-tracking repos for the end user Docker CE

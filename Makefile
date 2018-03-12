@@ -21,6 +21,10 @@ $(CLI_DIR)/build/docker:
 deb: ## build deb packages
 	$(MAKE) VERSION=$(VERSION) CLI_DIR=$(CLI_DIR) ENGINE_DIR=$(ENGINE_DIR) -C $(PACKAGING_DIR) deb
 
+# build mydeb for ubuntu-xenial(16.04)
+.PHONY: mydeb
+mydeb: ## build deb packages
+	$(MAKE) VERSION=$(VERSION) CLI_DIR=$(CLI_DIR) ENGINE_DIR=$(ENGINE_DIR) -C $(PACKAGING_DIR)/deb -f myMakefile ubuntu-xenial
 .PHONY: rpm
 rpm: ## build rpm packages
 	$(MAKE) VERSION=$(VERSION) CLI_DIR=$(CLI_DIR) ENGINE_DIR=$(ENGINE_DIR) -C $(PACKAGING_DIR) rpm

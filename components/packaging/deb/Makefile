@@ -29,6 +29,10 @@ debian: debian-stretch debian-wheezy debian-jessie ## build all debian deb packa
 .PHONY: raspbian
 raspbian: raspbian-stretch debian-jessie ## build all raspbian deb packages
 
+.PHONY: xenial_docker
+xenial_docker:
+	docker build -t debbuild-$@/$(ARCH) -f $(CURDIR)/ubuntu-xenial/Dockerfile.$(ARCH) .
+
 .PHONY: ubuntu-xenial
 ubuntu-xenial: ## build ubuntu xenial deb packages
 	docker build -t debbuild-$@/$(ARCH) -f $(CURDIR)/$@/Dockerfile.$(ARCH) .
@@ -40,7 +44,11 @@ ubuntu-xenial: ## build ubuntu xenial deb packages
 		-v $(ENGINE_DIR):/engine \
 		-v $(CLI_DIR):/cli \
 		-v $(CURDIR)/systemd:/root/build-deb/systemd \
-		debbuild-$@/$(ARCH)
+		-v $(CURDIR)/src/tini:/go/tini \
+		-v $(CURDIR)/src/libnetwork:/go/src/github.com/docker/libnetwork \
+		-v $(CURDIR)/src/runc:/go/src/github.com/opencontainers/runc \
+		-v $(CURDIR)/src/containerd:/go/src/github.com/containerd \
+		debbuild-$@/$(ARCH) /root/build-deb/build-deb
 	$(CHOWN) -R $(shell id -u):$(shell id -g) debbuild/$@
 
 .PHONY: ubuntu-trusty

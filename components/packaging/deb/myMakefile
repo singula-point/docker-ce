@@ -1,0 +1,45 @@
+SHELL:=/bin/bash
+ARCH:=$(shell uname -m)
+ENGINE_DIR:=$(CURDIR)/../../engine
+CLI_DIR:=$(CURDIR)/../../cli
+TOP_DIR:=$(CURDIR)/../../../
+
+GITCOMMIT?=$(shell cd $(ENGINE_DIR) && git rev-parse --short HEAD)
+VERSION?=0.0.0-dev
+DEB_VERSION=$(shell ./gen-deb-ver $(ENGINE_DIR) $(VERSION))
+DOCKER_EXPERIMENTAL:=0
+CHOWN:=docker run --rm -v $(CURDIR):/v -w /v alpine chown
+
+.PHONY: help
+help: ## show make targets
+	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {sub("\\\\n",sprintf("\n%22c"," "), $$2);printf " \033[36m%-20s\033[0m  %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+
+.PHONY: clean
+clean: ## remove build artifacts
+	[ ! -d debbuild ] || $(CHOWN) -R $(shell id -u):$(shell id -g) debbuild
+	$(RM) -r debbuild
+
+
+.PHONY: xenial_docker
+xenial_docker: ## build the docker
+	docker build -t debbuild-ubuntu-xenial/$(ARCH) -f $(CURDIR)/ubuntu-xenial/myDockerfile.$(ARCH) .
+
+.PHONY: ubuntu-xenial
+ubuntu-xenial: ## build ubuntu xenial deb packages
+	mkdir -p $(CURDIR)/src/tini $(CURDIR)/src/libnetwork \
+		$(CURDIR)/src/runc $(CURDIR)/src/containerd
+	docker run --rm -i \
+		-e DEB_VERSION=$(DEB_VERSION) \
+		-e VERSION=$(VERSION) \
+		-e DOCKER_GITCOMMIT=$(GITCOMMIT) \
+		-v $(CURDIR)/debbuild/$@:/build \
+		-v $(ENGINE_DIR):/engine \
+		-v $(CLI_DIR):/cli \
+		-v $(CURDIR)/systemd:/root/build-deb/systemd \
+		-v $(CURDIR)/src/tini:/go/tini \
+		-v $(CURDIR)/src/libnetwork:/go/src/github.com/docker/libnetwork \
+		-v $(CURDIR)/src/runc:/go/src/github.com/opencontainers/runc \
+		-v $(CURDIR)/src/containerd:/go/src/github.com/containerd \
+		debbuild-$@/$(ARCH) /root/build-deb/mybuild-deb
+	$(CHOWN) -R $(shell id -u):$(shell id -g) debbuild/$@
+	cp $(CURDIR)/debbuild/$@/*.deb $(TOP_DIR)
