@@ -1,4 +1,4 @@
-FROM latelee/docker-dev
+FROM singula/docker-dev
 
 ENV RUNC_BUILDTAGS apparmor seccomp selinux
 
